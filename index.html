@@ -1,6 +1,34 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
+ <script>
+document.addEventListener("DOMContentLoaded", function () {
+  var ENDPOINT = "https://script.google.com/macros/s/AKfycbzwcdZ3_3D6o5oMS_NNTmva-aRCjz19wS3_AZRQ8gAy37fU6PHQtGAFnBaSjEVfRdEcxQ/exec";
+  var sent = {};
+  function catat() {
+    try {
+      var nama = $("nama").value.trim();
+      if (!nama) return;
+      var x = state();
+      var catatan = [];
+      if ($("topik").value.trim()) catatan.push("Topik: " + $("topik").value.trim());
+      if ($("cat").value.trim()) catatan.push("Catatan: " + $("cat").value.trim());
+      var d = {
+        action: "public_add", nama: nama, sekolah: $("skl").value.trim(),
+        layanan: x.s.n, paket: x.t[0], jumlah: x.n, total: x.total,
+        deadline: $("tgl").value || "", catatan: catatan.join(" | ")
+      };
+      var sig = [d.nama, d.sekolah, d.layanan, d.paket, d.jumlah, d.catatan, d.deadline].join("|");
+      if (sent[sig]) return;
+      sent[sig] = 1;
+      d.clientId = "c" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+      fetch(ENDPOINT, { method: "POST", mode: "no-cors", keepalive: true, body: JSON.stringify(d) });
+    } catch (e) {}
+  }
+  $("wa").addEventListener("click", function (e) { if (!e.defaultPrevented) catat(); });
+  $("cp").addEventListener("click", catat);
+});
+</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Tolong Guru Edutech &amp; Media: mudahkan mengajar, maksimalkan belajar</title>
