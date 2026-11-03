@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Admin Tolong Guru</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--red:#b50f19;--red-d:#8f0b13;--ink:#2a1f1f;--mute:#6f6361;--paper:#faf7f5;--card:#fff;--line:#e8dfdc;--ok:#1d7a46;--warn:#b86e00}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.5 'Plus Jakarta Sans',system-ui,sans-serif;background:var(--paper);color:var(--ink)}
+h1,h2,h3{margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+header{background:var(--red);color:#fff;display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center;padding:12px 20px;position:sticky;top:0;z-index:5}
+header b{font-weight:800;font-size:17px;margin-right:auto}
+nav{display:flex;gap:4px}
+nav button{background:none;border:0;color:#fff;padding:8px 14px;border-radius:8px;cursor:pointer;font-weight:500;opacity:.85}
+nav button.on{background:#fff;color:var(--red);font-weight:700;opacity:1}
+.ghost{background:rgba(255,255,255,.15);border:0;color:#fff;padding:8px 12px;border-radius:8px;cursor:pointer}
+main{max-width:1180px;margin:0 auto;padding:20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:18px}
+.bar{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px}
+input,select,textarea{border:1px solid var(--line);border-radius:8px;padding:9px 11px;background:#fff;width:100%}
+.bar input,.bar select{width:auto;flex:1 1 150px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+label{display:block;font-size:13px;color:var(--mute);font-weight:500}
+label>*:first-child{margin-bottom:0}
+label input,label select,label textarea{margin-top:4px;color:var(--ink)}
+.wide{grid-column:1/-1}
+.btn{background:var(--red);color:#fff;border:0;border-radius:8px;padding:10px 18px;font-weight:700;cursor:pointer}
+.btn:hover{background:var(--red-d)}
+.btn.sec{background:#fff;color:var(--red);border:1px solid var(--red)}
+.btn.sm{padding:5px 10px;font-size:13px}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:860px}
+th,td{padding:9px 10px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top;font-size:14px}
+th{font-size:12.5px;color:var(--mute);font-weight:700;white-space:nowrap}
+td.n,th.n{text-align:right;white-space:nowrap}
+td small{display:block;color:var(--mute)}
+tr.cancel td{opacity:.5}
+.tag{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12.5px;font-weight:700;background:#f1ebe8}
+.tag.Lunas,.tag.Selesai{background:#dff3e6;color:var(--ok)}
+.tag.DP,.tag.Dikerjakan,.tag.Revisi{background:#fff0d6;color:var(--warn)}
+.tag.Baru{background:#fde3e4;color:var(--red)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:18px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.stat span{font-size:13px;color:var(--mute)}
+.stat b{display:block;font-size:22px;font-weight:800}
+.stat.red b{color:var(--red)}
+.empty{padding:28px;text-align:center;color:var(--mute)}
+#login{position:fixed;inset:0;background:var(--paper);display:grid;place-items:center;padding:20px;z-index:20}
+#login .card{width:min(420px,100%);display:grid;gap:12px}
+.err{color:var(--red);font-weight:500;min-height:1.3em;font-size:14px}
+#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:10px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:30}
+#toast.on{opacity:1}
+.hide{display:none!important}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+
+<header>
+  <b>Tolong Guru · Admin</b>
+  <nav id="nav">
+    <button data-v="list" class="on">Pesanan</button>
+    <button data-v="form">Input pesanan</button>
+    <button data-v="rekap">Rekap</button>
+  </nav>
+  <button class="ghost" id="bSync">Muat ulang</button>
+  <button class="ghost" id="bOut">Keluar</button>
+</header>
+
+<main>
+<!-- DAFTAR -->
+<section id="v-list">
+  <div class="stats" id="miniStats"></div>
+  <div class="card">
+    <div class="bar">
+      <input id="fQ" type="search" placeholder="Cari nama, sekolah, topik, ID">
+      <select id="fS"><option value="">Semua status</option></select>
+      <select id="fP"><option value="">Semua PIC</option><option>Deatry</option><option>Tia</option><option>Metia</option><option>Vivia</option><option>Ghani</option><option>Rafly</option></select>
+      <select id="fB"><option value="">Semua pembayaran</option><option>Belum bayar</option><option>DP</option><option>Lunas</option></select>
+    </div>
+    <div class="tw"><table>
+      <thead><tr><th>Pemesan</th><th>Layanan</th><th class="n">Total</th><th>Bayar</th><th>Status</th><th>Deadline</th><th></th></tr></thead>
+      <tbody id="tb"></tbody>
+    </table></div>
+    <div class="empty hide" id="emp">Belum ada pesanan yang cocok.</div>
+  </div>
+</section>
+
+<!-- FORM -->
+<section id="v-form" class="hide">
+  <div class="card">
+    <h3 style="margin-bottom:8px">Tempel pesan WhatsApp</h3>
+    <textarea id="wa" rows="4" placeholder="Tempel pesan dari customer. Baris berformat &quot;Nama: ...&quot;, &quot;Sekolah: ...&quot; akan mengisi form otomatis."></textarea>
+    <p style="margin:10px 0 0"><button class="btn sec" id="bParse">Isi form dari pesan</button></p>
+  </div>
+  <form class="card" id="f" autocomplete="off">
+    <h3 id="fTitle" style="margin-bottom:12px">Pesanan baru</h3>
+    <input type="hidden" id="id">
+    <div class="grid">
+      <label>Nama<input id="nama" required></label>
+      <label>Sekolah<input id="sekolah"></label>
+      <label>Layanan<input id="layanan" list="dl" required></label>
+      <datalist id="dl"><option>PPT</option><option>Infografis dan Poster</option><option>Video Pembelajaran</option><option>Take Konten (tanpa edit)</option><option>Take Konten ke Sekolah + Edit</option></datalist>
+      <label>Paket<input id="paket" list="dp"></label>
+      <datalist id="dp"><option>Standar</option><option>Tengah</option><option>Premium</option><option>Satu paket</option><option>Satu sesi</option></datalist>
+      <label>Jumlah<input id="jumlah" type="number" min="1" value="1"></label>
+      <label>Total harga (Rp)<input id="total" type="number" min="0" value="0"></label>
+      <label>Tanggal masuk<input id="tanggalMasuk" type="date"></label>
+      <label>Deadline<input id="deadline" type="date"></label>
+      <label>PIC produksi<select id="pic"><option value="">- Pilih PIC -</option><option>Deatry</option><option>Tia</option><option>Metia</option><option>Vivia</option><option>Ghani</option><option>Rafly</option></select></label>
+      <label>Status bayar<select id="statusBayar"><option>Belum bayar</option><option>DP</option><option>Lunas</option></select></label>
+      <label>Sudah dibayar (Rp)<input id="dibayar" type="number" min="0" value="0"></label>
+      <label>Status pesanan<select id="status"></select></label>
+      <label>Revisi terpakai<input id="revisi" type="number" min="0" value="0"></label>
+      <label>Sumber<select id="sumber"><option>WhatsApp</option><option>Website</option><option>Manual</option></select></label>
+      <label class="wide">Topik dan catatan<textarea id="catatan" rows="3"></textarea></label>
+    </div>
+    <p style="margin:16px 0 0;display:flex;gap:10px">
+      <button class="btn" type="submit">Simpan pesanan</button>
+      <button class="btn sec" type="button" id="bClr">Kosongkan</button>
+    </p>
+  </form>
+</section>
+
+<!-- REKAP -->
+<section id="v-rekap" class="hide">
+  <div class="card">
+    <div class="bar" style="margin:0">
+      <select id="rM"></select>
+      <button class="btn sec" id="bCsv">Unduh CSV</button>
+      <button class="btn sec" id="bCopy">Salin rekap teks</button>
+    </div>
+  </div>
+  <div class="stats" id="rStats"></div>
+  <div class="card"><h3 style="margin-bottom:10px">Per layanan</h3><div class="tw"><table id="rL"></table></div></div>
+  <div class="card"><h3 style="margin-bottom:10px">Per PIC</h3><div class="tw"><table id="rP"></table></div></div>
+  <div class="card"><h3 style="margin-bottom:10px">Per status pesanan</h3><div class="tw"><table id="rS"></table></div></div>
+  <div class="card"><h3 style="margin-bottom:10px">Per bulan</h3><div class="tw"><table id="rB"></table></div></div>
+</section>
+</main>
+<div id="toast"></div>
+
+<script>
+const STATUS=['Baru','Dikonfirmasi','Dikerjakan','Revisi','Selesai','Dibatalkan'];
+const $=id=>document.getElementById(id);
+const rp=n=>'Rp'+(Number(n)||0).toLocaleString('id-ID');
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const today=()=>new Date().toISOString().slice(0,10);
+let URLX='https://script.google.com/macros/s/AKfycbzwcdZ3_3D6o5oMS_NNTmva-aRCjz19wS3_AZRQ8gAy37fU6PHQtGAFnBaSjEVfRdEcxQ/exec', TOK='', orders=[];
+
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),2200)}
+
+/* ---------- API ---------- */
+async function apiGet(){
+  const r=await fetch(URLX+'?token='+encodeURIComponent(TOK));
+  const j=await r.json(); if(!j.ok) throw new Error(j.error||'Gagal'); return j.data;
+}
+async function apiPost(body){
+  const r=await fetch(URLX,{method:'POST',body:JSON.stringify({...body,token:TOK})});
+  const j=await r.json(); if(!j.ok) throw new Error(j.error||'Gagal'); return j;
+}
+async function load(silent){
+  try{const d=await apiGet();const ch=JSON.stringify(d)!==JSON.stringify(orders);orders=d;if(!silent||ch){const n=silent?d.filter(o=>o.status==='Baru').length:0;renderAll();if(silent&&ch)toast('Data diperbarui')}return true}
+  catch(e){if(silent)return false;toast('Gagal memuat: '+e.message);$('emp').textContent='Data belum bisa dimuat ('+e.message+'). Cek URL Web App dan pengaturan akses.';$('emp').classList.remove('hide');return false}
+}
+
+/* ---------- Mulai langsung (tanpa login) ---------- */
+$('bSync').onclick=async()=>{if(await load())toast('Data dimuat ulang')};
+$('bOut').classList.add('hide');
+load();
+setInterval(()=>{if(!document.hidden&&$('v-form').classList.contains('hide'))load(true)},10000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)load(true)});
+
+/* ---------- Tabs ---------- */
+function show(v){
+  ['list','form','rekap'].forEach(k=>$('v-'+k).classList.toggle('hide',k!==v));
+  document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
+  if(v==='rekap')renderRekap();
+}
+$('nav').onclick=e=>{if(e.target.dataset.v)show(e.target.dataset.v)};
+
+/* ---------- Daftar ---------- */
+STATUS.forEach(s=>{$('fS').add(new Option(s,s));$('status').add(new Option(s,s))});
+['fQ','fS','fB','fP'].forEach(i=>$(i).addEventListener('input',renderList));
+
+function renderAll(){renderList();renderRekap()}
+function renderList(){
+  const q=$('fQ').value.toLowerCase(),fs=$('fS').value,fb=$('fB').value,fp=$('fP').value;
+  const rows=orders.filter(o=>
+    (!fs||o.status===fs)&&(!fb||o.statusBayar===fb)&&(!fp||o.pic===fp)&&
+    (!q||[o.nama,o.sekolah,o.catatan,o.id,o.layanan].join(' ').toLowerCase().includes(q))
+  ).sort((a,b)=>(b.dibuat||'').localeCompare(a.dibuat||''));
+  const aktif=orders.filter(o=>!['Selesai','Dibatalkan'].includes(o.status));
+  const piutang=orders.filter(o=>o.status!=='Dibatalkan').reduce((s,o)=>s+Math.max(0,o.total-o.dibayar),0);
+  $('miniStats').innerHTML=
+    `<div class="stat red"><span>Pesanan baru</span><b>${orders.filter(o=>o.status==='Baru').length}</b></div>`+
+    `<div class="stat"><span>Sedang berjalan</span><b>${aktif.length}</b></div>`+
+    `<div class="stat"><span>Belum terbayar</span><b>${rp(piutang)}</b></div>`;
+  $('emp').classList.toggle('hide',rows.length>0);
+  $('tb').innerHTML=rows.map(o=>`
+  <tr class="${o.status==='Dibatalkan'?'cancel':''}">
+    <td><b>${esc(o.nama)}</b><small>${esc(o.sekolah)}</small><small>${esc(o.id)} · ${esc(o.sumber)}</small></td>
+    <td>${esc(o.layanan)}<small>${esc(o.paket)} × ${o.jumlah}</small><small>${esc((o.catatan||'').slice(0,60))}</small></td>
+    <td class="n">${rp(o.total)}</td>
+    <td><span class="tag ${esc(o.statusBayar.replace(' ','-'))}">${esc(o.statusBayar)}</span><small>${rp(o.dibayar)}</small>
+      ${o.dibayar<o.total&&o.status!=='Dibatalkan'?`<button class="btn sm sec" data-a="lunas" data-id="${esc(o.id)}">Lunaskan</button>`:''}</td>
+    <td><select data-a="status" data-id="${esc(o.id)}">${STATUS.map(s=>`<option${s===o.status?' selected':''}>${s}</option>`).join('')}</select></td>
+    <td>${esc(o.deadline||'-')}<small>${esc(o.pic)}</small></td>
+    <td style="white-space:nowrap"><button class="btn sm sec" data-a="edit" data-id="${esc(o.id)}">Ubah</button>
+      <button class="btn sm sec" data-a="del" data-id="${esc(o.id)}">Hapus</button></td>
+  </tr>`).join('');
+}
+$('tb').addEventListener('click',async e=>{
+  const a=e.target.dataset.a,id=e.target.dataset.id;if(!a||a==='status')return;
+  const o=orders.find(x=>x.id===id);if(!o)return;
+  if(a==='edit'){fill(o);show('form')}
+  if(a==='lunas'){o.dibayar=o.total;o.statusBayar='Lunas';await persist(o,'Ditandai lunas')}
+  if(a==='del'&&confirm('Hapus pesanan '+o.nama+'?')){
+    try{await apiPost({action:'delete',id});orders=orders.filter(x=>x.id!==id);renderAll();toast('Pesanan dihapus')}
+    catch(err){toast(err.message)}
+  }
+});
+$('tb').addEventListener('change',async e=>{
+  if(e.target.dataset.a!=='status')return;
+  const o=orders.find(x=>x.id===e.target.dataset.id);o.status=e.target.value;await persist(o,'Status diperbarui');
+});
+async function persist(o,msg){
+  try{await apiPost({action:'save',order:o});renderAll();toast(msg)}
+  catch(err){toast('Gagal menyimpan: '+err.message);load()}
+}
+
+/* ---------- Form ---------- */
+const F=['id','nama','sekolah','layanan','paket','jumlah','total','tanggalMasuk','deadline','pic','statusBayar','dibayar','status','revisi','sumber','catatan'];
+function clearForm(){
+  $('f').reset();$('id').value='';$('fTitle').textContent='Pesanan baru';
+  $('tanggalMasuk').value=today();$('status').value='Baru';$('sumber').value='WhatsApp';
+}
+function fill(o){F.forEach(k=>{if($(k))$(k).value=o[k]??''});$('fTitle').textContent='Ubah pesanan '+o.id}
+$('bClr').onclick=clearForm;clearForm();
+$('dibayar').addEventListener('input',()=>{
+  const d=+$('dibayar').value,t=+$('total').value;
+  $('statusBayar').value=d<=0?'Belum bayar':(d>=t&&t>0?'Lunas':'DP');
+});
+$('f').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const o={};F.forEach(k=>o[k]=$(k).value);
+  ['jumlah','total','dibayar','revisi'].forEach(k=>o[k]=Number(o[k])||0);
+  if(!o.id)delete o.id;
+  try{await apiPost({action:'save',order:o});await load();clearForm();show('list');toast('Pesanan tersimpan')}
+  catch(err){toast('Gagal menyimpan: '+err.message)}
+});
+$('bParse').onclick=()=>{
+  const map={nama:/^nama/i,sekolah:/^sekolah/i,layanan:/^layanan/i,paket:/^paket/i,jumlah:/^jumlah/i,
+    total:/^(perkiraan )?total/i,deadline:/^(dibutuhkan|deadline|tanggal)/i,catatan:/^(topik|materi|catatan)/i};
+  let extra=[];
+  $('wa').value.split('\n').forEach(line=>{
+    const m=line.match(/^\s*[*_\-•]*\s*([^:]{2,30}):\s*(.+)$/);if(!m)return;
+    const k=m[1].replace(/[*_]/g,'').trim(),v=m[2].replace(/[*_]/g,'').trim();
+    for(const f in map){if(map[f].test(k)){
+      if(f==='total'||f==='jumlah')$(f).value=parseInt(v.replace(/\D/g,''))||0;
+      else if(f==='deadline'){const d=new Date(v);if(!isNaN(d))$(f).value=d.toISOString().slice(0,10)}
+      else if(f==='catatan'){extra.push(k+': '+v)}
+      else $(f).value=v;
+      return}}
+    extra.push(k+': '+v);
+  });
+  if(extra.length)$('catatan').value=extra.join('\n');
+  toast('Form terisi, periksa lalu simpan');
+};
+
+/* ---------- Rekap ---------- */
+function months(){return [...new Set(orders.map(o=>(o.tanggalMasuk||'').slice(0,7)).filter(Boolean))].sort().reverse()}
+function monthLabel(m){if(!m)return 'Semua waktu';const[y,mo]=m.split('-');return new Date(y,mo-1).toLocaleDateString('id-ID',{month:'long',year:'numeric'})}
+$('rM').onchange=renderRekap;
+function rekapData(){
+  const m=$('rM').value;
+  return orders.filter(o=>o.status!=='Dibatalkan'&&(!m||(o.tanggalMasuk||'').startsWith(m)));
+}
+function group(rows,key){
+  const g={};rows.forEach(o=>{const k=key(o)||'-';g[k]=g[k]||{n:0,total:0,bayar:0};g[k].n++;g[k].total+=o.total;g[k].bayar+=o.dibayar});return g;
+}
+function tbl(el,g,h){
+  el.innerHTML=`<thead><tr><th>${h}</th><th class="n">Pesanan</th><th class="n">Total</th><th class="n">Terbayar</th><th class="n">Sisa</th></tr></thead><tbody>`+
+    Object.entries(g).map(([k,v])=>`<tr><td>${esc(k)}</td><td class="n">${v.n}</td><td class="n">${rp(v.total)}</td><td class="n">${rp(v.bayar)}</td><td class="n">${rp(v.total-v.bayar)}</td></tr>`).join('')+'</tbody>';
+}
+function renderRekap(){
+  const cur=$('rM').value;
+  $('rM').innerHTML='<option value="">Semua waktu</option>'+months().map(m=>`<option value="${m}">${monthLabel(m)}</option>`).join('');
+  $('rM').value=cur;
+  const r=rekapData(),t=r.reduce((s,o)=>s+o.total,0),b=r.reduce((s,o)=>s+o.dibayar,0);
+  $('rStats').innerHTML=
+    `<div class="stat"><span>Jumlah pesanan</span><b>${r.length}</b></div>`+
+    `<div class="stat"><span>Total nilai pesanan</span><b>${rp(t)}</b></div>`+
+    `<div class="stat red"><span>Sudah diterima</span><b>${rp(b)}</b></div>`+
+    `<div class="stat"><span>Belum dibayar</span><b>${rp(t-b)}</b></div>`;
+  tbl($('rL'),group(r,o=>o.layanan),'Layanan');
+  const all=orders.filter(o=>!$('rM').value||(o.tanggalMasuk||'').startsWith($('rM').value));
+  tbl($('rP'),group(r,o=>o.pic||'(belum ada PIC)'),'PIC');
+  tbl($('rS'),group(all,o=>o.status),'Status');
+  tbl($('rB'),group(orders.filter(o=>o.status!=='Dibatalkan'),o=>(o.tanggalMasuk||'').slice(0,7)),'Bulan');
+}
+$('bCopy').onclick=()=>{
+  const r=rekapData(),t=r.reduce((s,o)=>s+o.total,0),b=r.reduce((s,o)=>s+o.dibayar,0);
+  const g=group(r,o=>o.layanan);
+  const txt=`Rekap Tolong Guru - ${monthLabel($('rM').value)}\nPesanan: ${r.length}\nTotal: ${rp(t)}\nDiterima: ${rp(b)}\nBelum dibayar: ${rp(t-b)}\n\nPer layanan:\n`+
+    Object.entries(g).map(([k,v])=>`- ${k}: ${v.n} pesanan, ${rp(v.total)}`).join('\n');
+  navigator.clipboard.writeText(txt).then(()=>toast('Rekap disalin'));
+};
+$('bCsv').onclick=()=>{
+  const cols=['id','dibuat','nama','sekolah','layanan','paket','jumlah','total','tanggalMasuk','deadline','pic','statusBayar','dibayar','status','revisi','sumber','catatan'];
+  const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
+  const csv='\ufeff'+[cols.join(',')].concat(rekapData().map(o=>cols.map(c=>q(o[c])).join(','))).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download='rekap-tolong-guru-'+($('rM').value||'semua')+'.csv';a.click();
+};
+</script>
+</body>
+</html>
